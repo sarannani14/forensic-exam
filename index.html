@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Medicine Mastery Exam</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        #quiz-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        .progress-container { width: 100%; background: #eee; height: 8px; border-radius: 4px; margin-bottom: 20px; }
+        #progress-bar { width: 0%; height: 100%; background: var(--secondary); border-radius: 4px; transition: 0.4s; }
+        h2 { color: var(--primary); font-size: 1.2rem; margin-bottom: 20px; min-height: 50px; }
+        .options-grid { display: grid; gap: 12px; }
+        .option-btn { padding: 15px; border: 2px solid #ddd; border-radius: 8px; background: none; cursor: pointer; text-align: left; font-size: 1rem; transition: all 0.2s; }
+        .option-btn:hover { border-color: var(--secondary); background: #fff5f5; }
+        #result-screen { text-align: center; display: none; }
+        .score-circle { font-size: 3rem; font-weight: bold; color: var(--secondary); margin: 20px 0; }
+        .reward-msg { font-style: italic; color: #555; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div id="quiz-card">
+    <div id="game-view">
+        <div class="progress-container"><div id="progress-bar"></div></div>
+        <p id="q-count" style="font-weight: bold; color: #888;">Question 1/30</p>
+        <h2 id="question-text">Loading question...</h2>
+        <div id="options" class="options-grid"></div>
+    </div>
+
+    <div id="result-screen">
+        <h2>Exam Complete! 🎓</h2>
+        <div class="score-circle" id="final-score">0/30</div>
+        <p id="feedback-text"></p>
+        <div class="reward-msg" id="reward-msg"></div>
+        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; cursor:pointer;">Retake Exam</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "The most common fingerprint pattern is:", a: ["Arch", "Whorl", "Loop", "Composite"], c: 2 },
+        { q: "The bone most reliable for sex determination is:", a: ["Skull", "Pelvis", "Femur", "Humerus"], c: 1 },
+        { q: "Age estimation in young individuals is best done by:", a: ["Skull sutures", "Teeth eruption", "Hair pattern", "Fingerprints"], c: 1 },
+        { q: "The earliest postmortem change is:", a: ["Putrefaction", "Rigor mortis", "Livor mortis", "Algor mortis"], c: 3 },
+        { q: "Rigor mortis first appears in:", a: ["Lower limbs", "Upper limbs", "Face muscles", "Abdomen"], c: 2 },
+        { q: "Postmortem staining is also called:", a: ["Rigor mortis", "Livor mortis", "Algor mortis", "Cadaveric spasm"], c: 1 },
+        { q: "Cherry red coloration of skin is seen in:", a: ["Cyanide poisoning", "Arsenic poisoning", "Carbon monoxide poisoning", "Organophosphorus poisoning"], c: 2 },
+        { q: "Fine white froth at mouth and nose suggests:", a: ["Hanging", "Strangulation", "Drowning", "Smothering"], c: 2 },
+        { q: "Hesitation cuts are seen in:", a: ["Homicide", "Suicide", "Accident", "Natural death"], c: 1 },
+        { q: "Defense wounds are usually found on:", a: ["Back", "Chest", "Hands and forearms", "Abdomen"], c: 2 },
+        { q: "A lacerated wound is caused by:", a: ["Sharp weapon", "Blunt force", "Poison", "Firearm"], c: 1 },
+        { q: "An incised wound is longer than:", a: ["Its depth", "Its width", "Its length", "Its margin"], c: 0 },
+        { q: "Blackening around a firearm wound indicates:", a: ["Distant shot", "Close range shot", "Suicide only", "Exit wound"], c: 1 },
+        { q: "Grievous hurt is defined under IPC section:", a: ["299", "300", "320", "375"], c: 2 },
+        { q: "Antemortem burn shows:", a: ["No redness", "Vesicles with albuminous fluid", "No inflammation", "Dry blister"], c: 1 },
+        { q: "Ligature mark in hanging is usually:", a: ["Horizontal", "Transverse", "Oblique", "Circular"], c: 2 },
+        { q: "In strangulation, ligature mark is:", a: ["Oblique", "Incomplete", "High up in neck", "Horizontal"], c: 3 },
+        { q: "Cadaveric spasm occurs:", a: ["Hours after death", "Immediately after death", "During putrefaction", "After burial"], c: 1 },
+        { q: "Washerwoman skin is seen in:", a: ["Hanging", "Drowning", "Strangulation", "Burns"], c: 1 },
+        { q: "Molecular death means:", a: ["Brain death", "Heart stops", "Cellular death", "Organ failure"], c: 2 },
+        { q: "SLUDGE symptoms are seen in:", a: ["CO poisoning", "Cyanide poisoning", "Organophosphorus poisoning", "Alcohol intoxication"], c: 2 },
+        { q: "Antidote for organophosphorus poisoning:", a: ["Naloxone", "Atropine", "Vitamin K", "EDTA"], c: 1 },
+        { q: "Bitter almond smell is seen in:", a: ["Arsenic", "Cyanide", "CO", "Alcohol"], c: 1 },
+        { q: "Mees lines on nails indicate:", a: ["CO poisoning", "Arsenic poisoning", "Cyanide poisoning", "Lead poisoning"], c: 1 },
+        { q: "Fang marks are characteristic of:", a: ["Dog bite", "Snake bite", "Human bite", "Rat bite"], c: 1 },
+        { q: "Culpable homicide is defined under IPC:", a: ["299", "300", "302", "304A"], c: 0 },
+        { q: "Murder is defined under IPC:", a: ["299", "300", "320", "375"], c: 1 },
+        { q: "Death by negligence is IPC:", a: ["302", "304A", "375", "320"], c: 1 },
+        { q: "Rape is defined under IPC:", a: ["299", "320", "375", "302"], c: 2 },
+        { q: "Dying declaration is recorded under:", a: ["CrPC 154", "CrPC 161", "Evidence Act 32", "IPC 300"], c: 2 }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function renderQuestion() {
+        const q = questions[current];
+        document.getElementById("progress-bar").style.width = `${(current / questions.length) * 100}%`;
+        document.getElementById("q-count").innerText = `Question ${current + 1}/${questions.length}`;
+        document.getElementById("question-text").innerText = q.q;
+        
+        const optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+        q.a.forEach((opt, i) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(i);
+            optionsDiv.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(choice) {
+        if (choice === questions[current].c) score++;
+        current++;
+        if (current < questions.length) {
+            renderQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById("game-view").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        document.getElementById("final-score").innerText = `${score}/${questions.length}`;
+        
+        let feedback = "";
+        let reward = "";
+        
+        if (score === 30) {
+            feedback = "Absolute Genius! You're a Forensic Master! 🕵️‍♀️";
+            reward = "REWARD: You earned a 5-star dinner date! (I'm paying) ❤️";
+        } else if (score > 20) {
+            feedback = "Great job! You really know your stuff.";
+            reward = "REWARD: A coffee and dessert date for the smart girl. ☕";
+        } else {
+            feedback = "Good effort! Let's study together more?";
+            reward = "REWARD: Unlimited hugs until you pass next time. 🤗";
+        }
+        
+        document.getElementById("feedback-text").innerText = feedback;
+        document.getElementById("reward-msg").innerText = reward;
+    }
+
+    renderQuestion();
+</script>
+</body>
+</html>
